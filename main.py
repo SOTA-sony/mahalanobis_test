@@ -79,46 +79,42 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
     st.write('マハラノビス距離のプロット:')
     st.scatter_chart(df[['mahalanobis_distance']])
 
-    # 累積寄与率の折れ線グラフ
-    st.write('主成分数ごとの累積寄与率:')
+    # 主成分数ごとの累積寄与率の折れ線グラフ
+    st.write('Cumulative Explained Variance Ratio:')
     fig_variance_ratio = plt.figure()
     plt.plot(range(1, len(cumulative_explained_variance_ratio) + 1), cumulative_explained_variance_ratio, marker='o')
-    plt.title('主成分分析 (PCA) - 累積寄与率')
-    plt.xlabel('主成分の数')
-    plt.ylabel('累積寄与率')
-    plt.xticks(np.arange(1, 8, 1))  # X軸の目盛りを1から7までの自然数に設定
+    plt.title('Principal Component Analysis (PCA) - Cumulative Explained Variance Ratio')
+    plt.xlabel('Number of Principal Components')
+    plt.ylabel('Cumulative Explained Variance Ratio')
+    plt.xticks(np.arange(1, 8, 1))
     plt.grid(True)
     st.pyplot(fig_variance_ratio)
 
-        # マハラノビス距離のプロット
-    st.write('マハラノビス距離のプロット:')
+    # マハラノビス距離のプロット
+    st.write('Mahalanobis Distance Plot:')
     fig, ax = plt.subplots()
     ax.scatter(df.index, df['mahalanobis_distance'])
-    ax.set_xlabel('インデックス')
-    ax.set_ylabel('マハラノビス距離')
-    ax.set_title('マハラノビス距離の分布', fontproperties=font_prop)
+    ax.set_xlabel('Index')
+    ax.set_ylabel('Mahalanobis Distance')
+    ax.set_title('Distribution of Mahalanobis Distance')
 
     # 散布図を描画
-    # グラフの軸線を非表示にする
     plt.axhline(0, color='black', linewidth=0.5)
     plt.axvline(0, color='black', linewidth=0.5)
-
-    # グラフの枠を非表示にする
     plt.box(False)
 
     # 散布図を描画
     scatter = plt.scatter(df_pca[:, 0], df_pca[:, 1], c=df['mahalanobis_distance'], cmap='viridis')
-    plt.xlabel('第一主成分軸')
+    plt.xlabel('First Principal Component')
     plt.xticks(rotation=25)
-    plt.ylabel('第二主成分軸')
-    plt.title('主成分空間上の散布図')
-    plt.colorbar(scatter, label='マハラノビス距離')
+    plt.ylabel('Second Principal Component')
+    plt.title('Scatter Plot in Principal Component Space')
+    plt.colorbar(scatter, label='Mahalanobis Distance')
 
     # x軸とy軸の交点に"O"を表記（寄せる）
-    plt.text(0, 0, 'O',  fontsize=12, ha='left', va='top') 
+    plt.text(0, 0, 'O',  fontsize=12, ha='left', va='top')
 
     plt.show()
-
 
     # Streamlitにプロットを表示
     st.pyplot(fig)
