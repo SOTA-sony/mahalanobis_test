@@ -4,14 +4,14 @@ import numpy as np
 from sklearn.decomposition import PCA
 from scipy.spatial import distance
 import matplotlib.pyplot as plt
-from matplotlib.font_manager import FontProperties
+# from matplotlib.font_manager import FontProperties
 
 # matplotlibのフォント設定（Windowsの場合）
-font_path = "C:/Windows/Fonts/meiryo.ttc"  # 例: Windowsの場合
-# フォントプロパティの設定
-font_prop = FontProperties(fname=font_path, weight='bold') 
-jp_font = FontProperties(fname=font_path)
-plt.rcParams["font.family"] = jp_font.get_name()
+# font_path = "C:/Windows/Fonts/meiryo.ttc"  # 例: Windowsの場合
+# # フォントプロパティの設定
+# font_prop = FontProperties(fname=font_path, weight='bold') 
+# jp_font = FontProperties(fname=font_path)
+# plt.rcParams["font.family"] = jp_font.get_name()
 
 # ファイルアップロード
 st.sidebar.title("ファイルのアップロード")
