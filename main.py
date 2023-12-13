@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.decomposition import PCA
 from scipy.spatial import distance
 import matplotlib.pyplot as plt
+import plotly.express as px 
 # from matplotlib.font_manager import FontProperties
 
 # matplotlibのフォント設定（Windowsの場合）
@@ -25,11 +26,12 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
     # 評価データ読み込み
     df_test = pd.read_excel(uploaded_test_file)
     # 教師データと評価データの結合
-    df = pd.concat([df_train, df_test]).reset_index(drop=True)
+    df_con = pd.concat([df_train, df_test]).reset_index(drop=True)
 
     # 浮動小数点型の値を持つカラムのみに絞る
-    float_columns = df.select_dtypes(include='float').columns
-    df = df[float_columns]
+    float_columns = df_con.select_dtypes(include='float').columns
+    df = df_con[float_columns]
+    
 
     # 主成分分析（PCA）を実行
     pca = PCA(n_components=7)  # 主成分数を7までに制限
@@ -67,6 +69,9 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
 
     # ソートされたLoadings
     sorted_loadings_second_pc = pd.DataFrame(loadings[:, 1][sorted_loadings_second_pc_indices], index=df.columns[sorted_loadings_second_pc_indices], columns=['Second PC Loadings'])
+    df_time = pd.concat([df_con["DATA_DATETIME"],df],axis=1)
+    df_time.loc[:, "DATA_DATETIME"] = pd.to_datetime(df_time["DATA_DATETIME"], format='%Y/%m/%d %H:%M:%S')
+    df_time.sort_values(by="DATA_DATETIME", inplace=True)
 
     # Streamlitアプリケーションの作成
     st.title('マハラノビス距離の計算と主成分分析 (PCA)')
@@ -77,7 +82,8 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
 
     # マハラノビス距離のプロットを散布図に変更
     st.write('マハラノビス距離のプロット:')
-    st.scatter_chart(df[['mahalanobis_distance']])
+    st.scatter_chart(df_time.set_index('DATA_DATETIME')[['mahalanobis_distance']])
+
 
     # 主成分数ごとの累積寄与率の折れ線グラフ
     st.write('Cumulative Explained Variance Ratio:')
@@ -115,9 +121,26 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
     plt.text(0, 0, 'O',  fontsize=12, ha='left', va='top')
 
     plt.show()
-
     # Streamlitにプロットを表示
     st.pyplot(fig)
+
+    # 主成分空間での3D散布図
+    st.write('3D Scatter Plot in Principal Component Space:')
+    fig_3d = px.scatter_3d(
+        df_time.set_index('DATA_DATETIME'),
+        x=df_pca[:, 0],
+        y=df_pca[:, 1],
+        z=df_pca[:, 2],  # 第三主成分をZ軸に追加
+        color=df['mahalanobis_distance'],  # マハラノビス距離を色で表現
+        size_max=50,
+        labels={'x': 'First Principal Component', 'y': 'Second Principal Component', 'z': 'Third Principal Component'},
+        title='3D Scatter Plot in Principal Component Space',
+        color_continuous_scale='viridis',
+    )
+    fig_3d.update_layout(scene=dict(xaxis_title='First Principal Component', yaxis_title='Second Principal Component', zaxis_title='Third Principal Component'))
+    st.plotly_chart(fig_3d)
+
+
 
     # 絶対値が0より大きなLoadingsのみを表示
     filtered_loadings = sorted_loadings[sorted_loadings['First PC Loadings'].abs() > 0.0001]
@@ -133,6 +156,20 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
 
     st.write('第二主成分軸に対する負荷量:')
     st.table(filtered_loadings_second_pc)
+    # 第三主成分軸に対するLoadingsの絶対値を取得
+    loadings_third_pc = np.abs(loadings[:, 2])
+
+    # Loadingsを絶対値でソートしてインデックスを取得
+    sorted_loadings_third_pc_indices = np.argsort(loadings_third_pc)[::-1]
+
+    # ソートされたLoadings
+    sorted_loadings_third_pc = pd.DataFrame(loadings[:, 2][sorted_loadings_third_pc_indices], index=df.columns[sorted_loadings_third_pc_indices], columns=['Third PC Loadings'])
+    filtered_loadings_third_pc = sorted_loadings_third_pc[sorted_loadings_third_pc['Third PC Loadings'].abs() > 0.0001]
+    filtered_loadings_third_pc.columns = ['第三主成分負荷量']
+
+    # 第三主成分軸に対する負荷量の表示
+    st.write('第三主成分軸に対する負荷量:')
+    st.table(filtered_loadings_third_pc)
 
 else:
     st.sidebar.warning("ファイルがアップロードされていません。教師データと評価データを選択してください。")
