@@ -5,14 +5,38 @@ from sklearn.decomposition import PCA
 from scipy.spatial import distance
 import matplotlib.pyplot as plt
 import plotly.express as px 
-# from matplotlib.font_manager import FontProperties
+import dash
+from dash import dcc, html
+from dash.dependencies import Input, Output
+from dash import dash_table
+import plotly.graph_objs as go
 
-# matplotlibのフォント設定（Windowsの場合）
-# font_path = "C:/Windows/Fonts/meiryo.ttc"  # 例: Windowsの場合
-# # フォントプロパティの設定
-# font_prop = FontProperties(fname=font_path, weight='bold') 
-# jp_font = FontProperties(fname=font_path)
-# plt.rcParams["font.family"] = jp_font.get_name()
+# アプリケーションの背景色を設定
+st.set_page_config(
+    page_title="Your App Title",
+    page_icon="🌐",
+    initial_sidebar_state="expanded",  # サイドバーを開いた状態で開始
+)
+
+# サイドバーの背景色をモノクロに設定
+st.markdown(
+    """
+    <style>
+    .sidebar .sidebar-content {
+        background-color: #808080;  /* ホワイト（白）*/
+        color: #000000;  /* ブラック（黒）*/
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+# ここにアプリケーションのコードを追加
+# 例：st.title("Hello, Streamlit!")
+
+# サイドバーへのコンテンツの追加
+st.sidebar.title("Sidebar Title")
 
 # ファイルアップロード
 st.sidebar.title("ファイルのアップロード")
@@ -26,16 +50,14 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
     # 評価データ読み込み
     df_test = pd.read_excel(uploaded_test_file)
     # 教師データと評価データの結合
-    df_con = pd.concat([df_train, df_test]).reset_index(drop=True)
+    df = pd.concat([df_train, df_test]).reset_index(drop=True)
 
     # 浮動小数点型の値を持つカラムのみに絞る
-    float_columns = df_con.select_dtypes(include='float').columns
-    df = df_con[float_columns]
-    
+    float_columns = df.select_dtypes(include='float').columns    
 
     # 主成分分析（PCA）を実行
     pca = PCA(n_components=7)  # 主成分数を7までに制限
-    df_pca = pca.fit_transform(df)
+    df_pca = pca.fit_transform(df.loc[:,float_columns])
 
     # マハラノビス距離の計算
     mean_vector = df_pca.mean(axis=0)
@@ -69,8 +91,16 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
 
     # ソートされたLoadings
     sorted_loadings_second_pc = pd.DataFrame(loadings[:, 1][sorted_loadings_second_pc_indices], index=df.columns[sorted_loadings_second_pc_indices], columns=['Second PC Loadings'])
-    df_time = pd.concat([df_con["DATA_DATETIME"],df],axis=1)
-    df_time.loc[:, "DATA_DATETIME"] = pd.to_datetime(df_time["DATA_DATETIME"], format='%Y/%m/%d %H:%M:%S')
+    # 日時列と float 列を分ける
+   # "DATA_DATETIME" を含む列名を除外して float_columns を作成
+    float_columns = df.select_dtypes(include='float').columns.tolist()
+    # 日時列と float 列を分ける
+    df_time = df[["DATA_DATETIME"] + float_columns].copy()
+
+    # 日時列を datetime フォーマットに変換
+    df_time["DATA_DATETIME"] = pd.to_datetime(df_time["DATA_DATETIME"], format='%Y/%m/%d %H:%M:%S')
+
+    # 日時列を基準に DataFrame をソート
     df_time.sort_values(by="DATA_DATETIME", inplace=True)
 
     # Streamlitアプリケーションの作成
@@ -86,7 +116,7 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
 
 
     # 主成分数ごとの累積寄与率の折れ線グラフ
-    st.write('Cumulative Explained Variance Ratio:')
+    st.write('主成分数ごとの累積寄与率の折れ線グラフ：')
     fig_variance_ratio = plt.figure()
     plt.plot(range(1, len(cumulative_explained_variance_ratio) + 1), cumulative_explained_variance_ratio, marker='o')
     plt.title('Principal Component Analysis (PCA) - Cumulative Explained Variance Ratio')
@@ -95,37 +125,52 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
     plt.xticks(np.arange(1, 8, 1))
     plt.grid(True)
     st.pyplot(fig_variance_ratio)
+    
+    # Streamlitアプリケーション
+    st.title('2D散布図')
 
-    # マハラノビス距離のプロット
-    st.write('Mahalanobis Distance Plot:')
-    fig, ax = plt.subplots()
-    ax.scatter(df.index, df['mahalanobis_distance'])
-    ax.set_xlabel('Index')
-    ax.set_ylabel('Mahalanobis Distance')
-    ax.set_title('Distribution of Mahalanobis Distance')
+    df_pca_2d = pd.DataFrame(df_pca, columns=["1","2","3","4","5","6","7"])
+    df_2d = pd.concat([df[["EES_WAFER_ID","mahalanobis_distance"]],df_pca_2d],axis=1)
 
-    # 散布図を描画
-    plt.axhline(0, color='black', linewidth=0.5)
-    plt.axvline(0, color='black', linewidth=0.5)
-    plt.box(False)
+    # 散布図
+    scatter_data = px.scatter(
+        df_2d, x="1", y="2",
+        color="mahalanobis_distance",  # マハラノビス距離をカラーに設定
+        color_continuous_scale='viridis',
+        labels={'1': '第1主成分軸', '2': '第2主成分軸', 'EES_WAFER_ID': 'ウェーハID', 'mahalanobis_distance': 'マハラノビス距離'},
+        title='主成分空間上の散布図',
+        hover_data={'EES_WAFER_ID': True}  # カーソルを当てた際に表示するデータを指定
+    )
 
-    # 散布図を描画
-    scatter = plt.scatter(df_pca[:, 0], df_pca[:, 1], c=df['mahalanobis_distance'], cmap='viridis')
-    plt.xlabel('First Principal Component')
-    plt.xticks(rotation=25)
-    plt.ylabel('Second Principal Component')
-    plt.title('Scatter Plot in Principal Component Space')
-    plt.colorbar(scatter, label='Mahalanobis Distance')
+    # 垂直および水平の線を追加
+    scatter_data.update_layout(
+        shapes=[
+            dict(type='line', x0=0, x1=0, y0=-1, y1=1, line=dict(color='black', width=2)),  # 垂直線
+            dict(type='line', x0=-1, x1=1, y0=0, y1=0, line=dict(color='black', width=2))   # 水平線
+        ]
+    )
 
-    # x軸とy軸の交点に"O"を表記（寄せる）
-    plt.text(0, 0, 'O',  fontsize=12, ha='left', va='top')
+    # 散布図を表示
+    st.plotly_chart(scatter_data)
 
-    plt.show()
-    # Streamlitにプロットを表示
-    st.pyplot(fig)
+    # クリックされた点の情報
+    selected_points_info = []
 
+    # チェックボックスを使用して複数選択
+    selected_wafer_ids = st.multiselect("ウェーハIDを選択してテーブルを表示", df_2d["EES_WAFER_ID"])
+
+    # 選択された点の情報を取得
+    for wafer_id in selected_wafer_ids:
+        selected_points_info.append(df[df["EES_WAFER_ID"] == wafer_id])
+
+    # 選択された点の情報をテーブルで表示
+    if selected_points_info:
+        selected_point_df = pd.concat(selected_points_info)
+        st.table(selected_point_df)
+
+#############################################################################################
     # 主成分空間での3D散布図
-    st.write('3D Scatter Plot in Principal Component Space:')
+    st.title('3D散布図')
     fig_3d = px.scatter_3d(
         df_time.set_index('DATA_DATETIME'),
         x=df_pca[:, 0],
@@ -137,7 +182,8 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
         title='3D Scatter Plot in Principal Component Space',
         color_continuous_scale='viridis',
     )
-    fig_3d.update_layout(scene=dict(xaxis_title='First Principal Component', yaxis_title='Second Principal Component', zaxis_title='Third Principal Component'))
+
+    # 3D Scatter Plotを表示
     st.plotly_chart(fig_3d)
 
 
