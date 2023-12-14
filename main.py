@@ -4,12 +4,7 @@ import numpy as np
 from sklearn.decomposition import PCA
 from scipy.spatial import distance
 import matplotlib.pyplot as plt
-import plotly.express as px 
-import dash
-from dash import dcc, html
-from dash.dependencies import Input, Output
-from dash import dash_table
-import plotly.graph_objs as go
+import plotly.express as px
 
 # アプリケーションの背景色を設定
 st.set_page_config(
@@ -125,7 +120,7 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
     plt.xticks(np.arange(1, 8, 1))
     plt.grid(True)
     st.pyplot(fig_variance_ratio)
-    
+
     # Streamlitアプリケーション
     st.title('2D散布図')
 
