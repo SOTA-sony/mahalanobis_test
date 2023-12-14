@@ -8,7 +8,7 @@ import plotly.express as px
 
 # アプリケーションの背景色を設定
 st.set_page_config(
-    page_title="Your App Title",
+    page_title="PCA & Mahalanobis Distance Tool",
     page_icon="🌐",
     initial_sidebar_state="expanded",  # サイドバーを開いた状態で開始
 )
@@ -31,7 +31,7 @@ st.markdown(
 # 例：st.title("Hello, Streamlit!")
 
 # サイドバーへのコンテンツの追加
-st.sidebar.title("Sidebar Title")
+st.sidebar.title("Input Bar")
 
 # ファイルアップロード
 st.sidebar.title("ファイルのアップロード")
