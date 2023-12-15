@@ -117,29 +117,35 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
     scatter_data = px.scatter(
         df_2d, x="1", y="2",
         color="mahalanobis_distance",  # マハラノビス距離をカラーに設定
-        color_continuous_scale=['blue', 'red'], # 'Turbo'
+        color_continuous_scale=['blue', 'red'],
         labels={'1': '第1主成分軸', '2': '第2主成分軸', 'EES_WAFER_ID': 'ウェーハID', 'mahalanobis_distance': 'マハラノビス距離'},
         title='主成分空間上の散布図',
         hover_data={'EES_WAFER_ID': True}  # カーソルを当てた際に表示するデータを指定
+    )
+
+    # 原点を中心にするための範囲設定
+    max_range = max(abs(df_2d["1"]).max(), abs(df_2d["2"]).max())
+    scatter_data.update_layout(
+        xaxis=dict(range=[-max_range, max_range]),
+        yaxis=dict(range=[-max_range, max_range]),
     )
 
     # 原点を交差する垂直な直線
     scatter_data.add_shape(
         type='line',
         x0=0, x1=0,
-        y0=scatter_data.data[0]['y'].min(),
-        y1=scatter_data.data[0]['y'].max(),
+        y0=-max_range, y1=max_range,
         line=dict(color='black', width=1)
     )
 
     # 原点を交差する水平な直線
     scatter_data.add_shape(
         type='line',
-        x0=scatter_data.data[0]['x'].min(),
-        x1=scatter_data.data[0]['x'].max(),
+        x0=-max_range, x1=max_range,
         y0=0, y1=0,
         line=dict(color='black', width=1)
     )
+
     # 散布図を表示
     st.plotly_chart(scatter_data)
 
