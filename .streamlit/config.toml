@@ -1,0 +1,11 @@
+[theme]
+base = "light"
+primaryColor = "#f0f0f0"  # 任意の色を指定
+backgroundColor = "#f0f0f0"  # アプリ全体の背景色
+secondaryBackgroundColor = "#f0f0f0"  # 任意の色を指定
+textColor = "#000000"  # 任意の色を指定
+font = "sans-serif"
+
+[sidebar]
+backgroundColor = "#000080"   # サイドバーの背景色
+titleColor = "#FFFF00"  # サイドバーのタイトルの色 (黄色)
