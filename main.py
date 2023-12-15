@@ -244,18 +244,22 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
     st.plotly_chart(scatter_data)
 
     # クリックされた点の情報
-    selected_points_info = []
+    selected_points_info_2 = []
 
     # チェックボックスを使用して複数選択
-    selected_wafer_ids = st.multiselect("ウェーハIDを選択してテーブルを表示", df_2d["EES_WAFER_ID"])
+    selected_wafer_ids_2 = st.multiselect(
+        "ウェーハIDを選択してテーブルを表示",
+        df_2d["EES_WAFER_ID"],
+        key="unique_key_2"  # 一意のキーを指定する
+    )
 
     # 選択された点の情報を取得
-    for wafer_id in selected_wafer_ids:
-        selected_points_info.append(df[df["EES_WAFER_ID"] == wafer_id])
+    for wafer_id in selected_wafer_ids_2:
+        selected_points_info_2.append(df[df["EES_WAFER_ID"] == wafer_id])
 
     # 選択された点の情報をテーブルで表示
-    if selected_points_info:
-        selected_point_df = pd.concat(selected_points_info)
+    if selected_points_info_2:
+        selected_point_df = pd.concat(selected_points_info_2)
         st.table(selected_point_df)
 
 #############################################################################################
