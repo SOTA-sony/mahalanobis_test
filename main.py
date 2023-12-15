@@ -45,6 +45,8 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
 
     # Mahalanobis distanceを計算して新しい列に追加
     df['mahalanobis_distance'] = [distance.mahalanobis(x, mean_vector, covariance_matrix_inv) for x in df_pca]
+    # マハラノビス距離を小数点3桁まで表示
+    df['mahalanobis_distance'] = df['mahalanobis_distance'].apply(lambda x: round(x, 3))
 
     # 累積寄与率の計算
     explained_variance_ratio = pca.explained_variance_ratio_
@@ -115,7 +117,7 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
     scatter_data = px.scatter(
         df_2d, x="1", y="2",
         color="mahalanobis_distance",  # マハラノビス距離をカラーに設定
-        color_continuous_scale='Turbo',
+        color_continuous_scale=['blue', 'red'], # 'Turbo'
         labels={'1': '第1主成分軸', '2': '第2主成分軸', 'EES_WAFER_ID': 'ウェーハID', 'mahalanobis_distance': 'マハラノビス距離'},
         title='主成分空間上の散布図',
         hover_data={'EES_WAFER_ID': True}  # カーソルを当てた際に表示するデータを指定
@@ -127,7 +129,7 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
         x0=0, x1=0,
         y0=scatter_data.data[0]['y'].min(),
         y1=scatter_data.data[0]['y'].max(),
-        line=dict(color='black', width=2)
+        line=dict(color='black', width=1)
     )
 
     # 原点を交差する水平な直線
@@ -136,7 +138,7 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
         x0=scatter_data.data[0]['x'].min(),
         x1=scatter_data.data[0]['x'].max(),
         y0=0, y1=0,
-        line=dict(color='black', width=2)
+        line=dict(color='black', width=1)
     )
     # 散布図を表示
     st.plotly_chart(scatter_data)
@@ -168,7 +170,7 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
         size_max=50,
         labels={'x': '第１主成分軸', 'y': '第２主成分軸', 'z': '第３主成分軸','color': 'マハラノビス距離'},
         title="主成分空間内の3D散布図",
-        color_continuous_scale='Turbo',
+        color_continuous_scale=['blue', 'red'], # 'Turbo'
     )
 
     # 3D Scatter Plotを表示
