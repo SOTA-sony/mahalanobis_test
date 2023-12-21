@@ -63,7 +63,7 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
     sorted_loadings_indices = np.argsort(loadings_first_pc)[::-1]
 
     # ソートされたLoadings
-    sorted_loadings = pd.DataFrame(loadings[:, 0][sorted_loadings_indices], index=df.columns[sorted_loadings_indices], columns=['First PC Loadings'])
+    sorted_loadings = pd.DataFrame(loadings[:, 0][sorted_loadings_indices], index=df[float_columns].columns[sorted_loadings_indices], columns=['First PC Loadings'])
 
     # 第二主成分軸に対するLoadingsの絶対値を取得
     loadings_second_pc = np.abs(loadings[:, 1])
@@ -72,7 +72,7 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
     sorted_loadings_second_pc_indices = np.argsort(loadings_second_pc)[::-1]
 
     # ソートされたLoadings
-    sorted_loadings_second_pc = pd.DataFrame(loadings[:, 1][sorted_loadings_second_pc_indices], index=df.columns[sorted_loadings_second_pc_indices], columns=['Second PC Loadings'])
+    sorted_loadings_second_pc = pd.DataFrame(loadings[:, 1][sorted_loadings_second_pc_indices], index=df[float_columns].columns[sorted_loadings_second_pc_indices], columns=['Second PC Loadings'])
     # 日時列と float 列を分ける
    # "DATA_DATETIME" を含む列名を除外して float_columns を作成
     float_columns = df.select_dtypes(include='float').columns.tolist()
@@ -322,7 +322,7 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
     sorted_loadings_third_pc_indices = np.argsort(loadings_third_pc)[::-1]
 
     # ソートされたLoadings
-    sorted_loadings_third_pc = pd.DataFrame(loadings[:, 2][sorted_loadings_third_pc_indices], index=df.columns[sorted_loadings_third_pc_indices], columns=['Third PC Loadings'])
+    sorted_loadings_third_pc = pd.DataFrame(loadings[:, 2][sorted_loadings_third_pc_indices], index=df[float_columns].columns[sorted_loadings_third_pc_indices], columns=['Third PC Loadings'])
     filtered_loadings_third_pc = sorted_loadings_third_pc[sorted_loadings_third_pc['Third PC Loadings'].abs() > 0.0001]
     filtered_loadings_third_pc.columns = ['第三主成分負荷量']
 
