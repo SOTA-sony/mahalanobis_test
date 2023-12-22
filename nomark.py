@@ -5,6 +5,7 @@ from sklearn.decomposition import PCA
 from scipy.spatial import distance
 import matplotlib.pyplot as plt
 import plotly.express as px
+from sklearn.preprocessing import StandardScaler
 # アプリケーションの背景色を設定
 st.set_page_config(
     page_title="PCA & Mahalanobis Distance Tool",
@@ -35,8 +36,14 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
     # 浮動小数点型の値を持つカラムのみに絞る
     float_columns = df.select_dtypes(include='float').columns    
 
+    # 標準化のためのスケーラーを作成
+    scaler = StandardScaler()
+
+    # データを標準化
+    df[float_columns] = scaler.fit_transform(df[float_columns])
+
     # 主成分分析（PCA）を実行
-    pca = PCA(n_components=7)  # 主成分数を7までに制限
+    pca = PCA(n_components=10)  # 主成分数を7までに制限
     df_pca = pca.fit_transform(df.loc[:,float_columns])
 
     # マハラノビス距離の計算
@@ -112,72 +119,74 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
     plt.title('Principal Component Analysis (PCA) - Cumulative Explained Variance Ratio')
     plt.xlabel('Number of Principal Components')
     plt.ylabel('Cumulative Explained Variance Ratio')
-    plt.xticks(np.arange(1, 8, 1))
+    plt.xticks(np.arange(1, 11, 1))
     plt.grid(True)
     st.pyplot(fig_variance_ratio)
 
 ##############################################################################################################################
-    # n = 7 散布図
-        # Streamlitアプリケーション
-    st.title('散布図（第１主成分～第７主成分）')
 
-    df_pca_2d = pd.DataFrame(df_pca, columns=[f"第{i}主成分" for i in range(1,8)])
-    df_2d = pd.concat([df[["EES_WAFER_ID","mark","mahalanobis_distance"]],df_pca_2d],axis=1)
+    # # n = 7 散布図
+    #     # Streamlitアプリケーション
+    # st.title('散布図（第１主成分～第７主成分）')
 
-    # 散布図
-    scatter_data = px.scatter(
-        df_2d, x="第1主成分", y="第2主成分",
-        color=df_2d['mark'],  # 'mark' 列に基づいて色分け
-        color_discrete_map={'教師データ': 'blue', '評価データ': 'red'},
-        labels={'第1主成分': '第1主成分軸', '第2主成分': '第2主成分軸', 'EES_WAFER_ID': 'ウェーハID', 'mahalanobis_distance': 'マハラノビス距離'},
-        title='主成分空間上の散布図',
-        hover_data={'EES_WAFER_ID': True}  # カーソルを当てた際に表示するデータを指定
-    )
+    # df_pca_2d = pd.DataFrame(df_pca, columns=[f"第{i}主成分" for i in range(1,8)])
+    # df_2d = pd.concat([df[["EES_WAFER_ID","mark","mahalanobis_distance"]],df_pca_2d],axis=1)
 
-    # カラーバーの位置を下げる
-    scatter_data.update_layout(coloraxis_colorbar=dict(yanchor="top", y=5, ypad=20))
+    # # 散布図
+    # scatter_data = px.scatter(
+    #     df_2d, x="第1主成分", y="第2主成分",
+    #     color=df_2d['mark'],  # 'mark' 列に基づいて色分け
+    #     color_discrete_map={'教師データ': 'blue', '評価データ': 'red'},
+    #     labels={'第1主成分': '第1主成分軸', '第2主成分': '第2主成分軸', 'EES_WAFER_ID': 'ウェーハID', 'mahalanobis_distance': 'マハラノビス距離'},
+    #     title='主成分空間上の散布図',
+    #     hover_data={'EES_WAFER_ID': True}  # カーソルを当てた際に表示するデータを指定
+    # )
 
-    # 原点を中心にするための範囲設定
-    max_range = max(abs(df_2d["第1主成分"]).max(), abs(df_2d["第2主成分"]).max())
-    scatter_data.update_layout(
-        xaxis=dict(range=[-max_range, max_range]),
-        yaxis=dict(range=[-max_range, max_range]),
-    )
+    # # カラーバーの位置を下げる
+    # scatter_data.update_layout(coloraxis_colorbar=dict(yanchor="top", y=5, ypad=20))
+
+    # # 原点を中心にするための範囲設定
+    # max_range = max(abs(df_2d["第1主成分"]).max(), abs(df_2d["第2主成分"]).max())
+    # scatter_data.update_layout(
+    #     xaxis=dict(range=[-max_range, max_range]),
+    #     yaxis=dict(range=[-max_range, max_range]),
+    # )
 
 
-    # 原点を交差する垂直な直線
-    scatter_data.add_shape(
-        type='line',
-        x0=0, x1=0,
-        y0=-max_range, y1=max_range,
-        line=dict(color='black', width=1)
-    )
+    # # 原点を交差する垂直な直線
+    # scatter_data.add_shape(
+    #     type='line',
+    #     x0=0, x1=0,
+    #     y0=-max_range, y1=max_range,
+    #     line=dict(color='black', width=1)
+    # )
 
-    # 原点を交差する水平な直線
-    scatter_data.add_shape(
-        type='line',
-        x0=-max_range, x1=max_range,
-        y0=0, y1=0,
-        line=dict(color='black', width=1)
-    )
+    # # 原点を交差する水平な直線
+    # scatter_data.add_shape(
+    #     type='line',
+    #     x0=-max_range, x1=max_range,
+    #     y0=0, y1=0,
+    #     line=dict(color='black', width=1)
+    # )
 
-    # 散布図を表示
-    st.plotly_chart(scatter_data)
+    # # 散布図を表示
+    # st.plotly_chart(scatter_data)
 
-    # クリックされた点の情報
-    selected_points_info = []
+    # # クリックされた点の情報
+    # selected_points_info = []
 
-    # チェックボックスを使用して複数選択
-    selected_wafer_ids = st.multiselect("ウェーハIDを選択してテーブルを表示", df_2d["EES_WAFER_ID"])
+    # # チェックボックスを使用して複数選択
+    # selected_wafer_ids = st.multiselect("ウェーハIDを選択してテーブルを表示", df_2d["EES_WAFER_ID"])
 
-    # 選択された点の情報を取得
-    for wafer_id in selected_wafer_ids:
-        selected_points_info.append(df[df["EES_WAFER_ID"] == wafer_id])
+    # # 選択された点の情報を取得
+    # for wafer_id in selected_wafer_ids:
+    #     selected_points_info.append(df[df["EES_WAFER_ID"] == wafer_id])
 
-    # 選択された点の情報をテーブルで表示
-    if selected_points_info:
-        selected_point_df = pd.concat(selected_points_info)
-        st.table(selected_point_df)
+    # # 選択された点の情報をテーブルで表示
+    # if selected_points_info:
+    #     selected_point_df = pd.concat(selected_points_info)
+    #     st.table(selected_point_df)
+
 ##############################################################################################################################
     # 主成分分析（PCA）を実行
     pca = PCA(n_components=2)  
@@ -260,7 +269,7 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
 
 #############################################################################################
     # 主成分分析（PCA）を実行
-    pca = PCA(n_components=3)  # 主成分数を7までに制限
+    pca = PCA(n_components=3)  # 主成分数を3までに制限
     df_pca = pca.fit_transform(df.loc[:,float_columns])
 
     # マハラノビス距離の計算
@@ -294,11 +303,24 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
     # 3D Scatter Plotを表示
     st.plotly_chart(fig_3d)
 
+    # 第一主成分のトレンド
+    df_time3 = pd.DataFrame(df_pca, columns=["PC1", "PC2", "PC3"])
+    df_time3 = pd.concat([df[["DATA_DATETIME","mark","mahalanobis_distance_3"]], df_time3], axis=1)
+    scatter_data = px.scatter(
+    df_time3, x='DATA_DATETIME', y='PC1',
+    color=df_time3['mark'],  # 'mark' 列に基づいて色分け
+    color_discrete_map={'教師データ': 'blue', '評価データ': 'red'},
+    # labels={'PC1': '第１主成分', 'mahalanobis_distance_3': 'マハラノビス距離'},
+    title='第１主成分のトレンド',
+    hover_data={'PC1': True, 'mahalanobis_distance_3': True, 'mark': True}  # カーソルを当てた際に表示するデータを指定
+)
+    # 散布図を表示
+    st.plotly_chart(scatter_data)
 
 
     # 絶対値が0より大きなLoadingsのみを表示
-    filtered_loadings = sorted_loadings[sorted_loadings['First PC Loadings'].abs() > 0.0001]
-    filtered_loadings_second_pc = sorted_loadings_second_pc[sorted_loadings_second_pc['Second PC Loadings'].abs() > 0.0001]
+    filtered_loadings = sorted_loadings[:20]
+    filtered_loadings_second_pc = sorted_loadings_second_pc[:20]
 
     # カラム名を日本語に変更
     filtered_loadings.columns = ['第一主成分負荷量']
@@ -306,7 +328,7 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
 
     # Loadingsの表示
     st.write('第一主成分軸に対する負荷量:')
-    st.table(filtered_loadings)
+    st.table(filtered_loadings[:])
 
     st.write('第二主成分軸に対する負荷量:')
     st.table(filtered_loadings_second_pc)
@@ -318,7 +340,7 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
 
     # ソートされたLoadings
     sorted_loadings_third_pc = pd.DataFrame(loadings[:, 2][sorted_loadings_third_pc_indices], index=df[float_columns].columns[sorted_loadings_third_pc_indices], columns=['Third PC Loadings'])
-    filtered_loadings_third_pc = sorted_loadings_third_pc[sorted_loadings_third_pc['Third PC Loadings'].abs() > 0.0001]
+    filtered_loadings_third_pc = sorted_loadings_third_pc[:20]
     filtered_loadings_third_pc.columns = ['第三主成分負荷量']
 
     # 第三主成分軸に対する負荷量の表示
