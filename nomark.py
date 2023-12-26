@@ -108,6 +108,10 @@ if uploaded_train_file is not None and uploaded_test_file is not None:
         hover_data={'DATA_DATETIME': True, 'mahalanobis_distance': True, 'mark': True}  # カーソルを当てた際に表示するデータを指定
     )
 
+    
+    # y軸の範囲を1から4に設定
+    scatter_data.update_layout(yaxis_range=[1, 4])
+
     # 散布図を表示
     st.plotly_chart(scatter_data)
 
